@@ -1,4 +1,7 @@
 const express = require('express');
+const helmet = require('helmet');
+const cors = require('cors');
+const rateLimit = require('express-rate-limit');
 const config = require('./config/env');
 const db = require('./config/db');
 
@@ -9,45 +12,51 @@ const app = express();
 
 async function startServer() {
   try {
-    // Initialiser les connexions aux bases de données
+    // Initialize database connections
     await db.connectMongo();
     await db.connectRedis();
 
-    // Configurer les middlewares Express
-    app.use(express.json());
-    app.use(express.urlencoded({ extended: true }));
+    // Configure Express middlewares
+    app.use(helmet()); // Security headers
+    app.use(cors()); // CORS support
+    app.use(express.json()); // Parse JSON bodies
+    app.use(express.urlencoded({ extended: true })); // Parse URL-encoded bodies
 
-    // Middleware de logging basique
-    app.use((req, res, next) => {
-      console.log(`${new Date().toISOString()} - ${req.method} ${req.path}`);
-      next();
+    // Rate limiting
+    const limiter = rateLimit({
+      windowMs: 15 * 60 * 1000, // 15 minutes
+      max: 100 // limit each IP to 100 requests per windowMs
     });
+    app.use(limiter);
 
-    // Monter les routes
+    // Mount routes
     app.use('/api/courses', courseRoutes);
     app.use('/api/students', studentRoutes);
 
-    // Middleware de gestion d'erreur
+    // Error handling middleware
     app.use((err, req, res, next) => {
       console.error(err.stack);
-      res.status(500).json({ error: 'Something broke!' });
+      res.status(500).json({ error: 'Something went wrong!' });
     });
 
-    // Démarrer le serveur
-    app.listen(config.port, () => {
+    // Start server
+    const server = app.listen(config.port, () => {
       console.log(`Server running on port ${config.port}`);
     });
+
+    // Graceful shutdown
+    process.on('SIGTERM', () => {
+      console.log('SIGTERM signal received. Closing server...');
+      server.close(async () => {
+        await db.closeConnections();
+        process.exit(0);
+      });
+    });
+
   } catch (error) {
     console.error('Failed to start server:', error);
     process.exit(1);
   }
 }
-
-// Gestion propre de l'arrêt
-process.on('SIGTERM', async () => {
-  console.log('SIGTERM signal received. Closing HTTP server...');
-  await db.closeConnections();
-  process.exit(0);
-});
 
 startServer();

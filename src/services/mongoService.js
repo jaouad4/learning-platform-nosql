@@ -4,18 +4,19 @@ const db = require('../config/db');
 async function findOneById(collection, id) {
     try {
         const objectId = new ObjectId(id);
-        return await db.getMongoDb().collection(collection).findOne({ _id: objectId });
+        return await db.getDb().collection(collection).findOne({ _id: objectId });
     } catch (error) {
-        console.error(`Error in findOneById: ${error}`);
+        console.error(`Error finding document in ${collection}:`, error);
         throw error;
     }
 }
 
 async function insertOne(collection, document) {
     try {
-        return await db.getMongoDb().collection(collection).insertOne(document);
+        const result = await db.getDb().collection(collection).insertOne(document);
+        return { ...document, _id: result.insertedId };
     } catch (error) {
-        console.error(`Error in insertOne: ${error}`);
+        console.error(`Error inserting document into ${collection}:`, error);
         throw error;
     }
 }
@@ -23,21 +24,26 @@ async function insertOne(collection, document) {
 async function updateOne(collection, id, update) {
     try {
         const objectId = new ObjectId(id);
-        return await db.getMongoDb().collection(collection)
-            .updateOne({ _id: objectId }, { $set: update });
+        return await db.getDb().collection(collection).updateOne(
+            { _id: objectId },
+            update
+        );
     } catch (error) {
-        console.error(`Error in updateOne: ${error}`);
+        console.error(`Error updating document in ${collection}:`, error);
         throw error;
     }
 }
 
-async function deleteOne(collection, id) {
+async function getCollectionStats(collection) {
     try {
-        const objectId = new ObjectId(id);
-        return await db.getMongoDb().collection(collection)
-            .deleteOne({ _id: objectId });
+        const stats = await db.getDb().collection(collection).stats();
+        return {
+            documentCount: stats.count,
+            totalSize: stats.size,
+            avgDocumentSize: stats.avgObjSize
+        };
     } catch (error) {
-        console.error(`Error in deleteOne: ${error}`);
+        console.error(`Error getting stats for ${collection}:`, error);
         throw error;
     }
 }
@@ -46,5 +52,5 @@ module.exports = {
     findOneById,
     insertOne,
     updateOne,
-    deleteOne
+    getCollectionStats
 };
