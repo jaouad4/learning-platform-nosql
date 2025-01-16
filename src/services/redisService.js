@@ -1,13 +1,44 @@
-// Question : Comment gérer efficacement le cache avec Redis ?
-// Réponse :
-// Question: Quelles sont les bonnes pratiques pour les clés Redis ?
-// Réponse :
+const db = require('../config/db');
 
-// Fonctions utilitaires pour Redis
-async function cacheData(key, data, ttl) {
-    // TODO: Implémenter une fonction générique de cache
+async function cacheData(key, data, ttl = 3600) {
+  try {
+    const redisClient = db.getRedisClient();
+    const serializedData = JSON.stringify(data);
+    await redisClient.set(key, serializedData, { EX: ttl });
+  } catch (error) {
+    console.error(`Error in cacheData: ${error}`);
+    throw error;
   }
-  
-  module.exports = {
-    // TODO: Exporter les fonctions utilitaires
-  };
+}
+
+async function getCachedData(key) {
+  try {
+    const redisClient = db.getRedisClient();
+    const data = await redisClient.get(key);
+    return data ? JSON.parse(data) : null;
+  } catch (error) {
+    console.error(`Error in getCachedData: ${error}`);
+    throw error;
+  }
+}
+
+async function invalidateCache(key) {
+  try {
+    const redisClient = db.getRedisClient();
+    await redisClient.del(key);
+  } catch (error) {
+    console.error(`Error in invalidateCache: ${error}`);
+    throw error;
+  }
+}
+
+function generateCacheKey(prefix, identifier) {
+  return `${prefix}:${identifier}`;
+}
+
+module.exports = {
+  cacheData,
+  getCachedData,
+  invalidateCache,
+  generateCacheKey
+};
