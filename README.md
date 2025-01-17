@@ -43,17 +43,23 @@ process.on('SIGTERM', async () => {
 });
 ```
 
+---
+
 ### 5. Pourquoi séparer la logique métier des routes ?
 Séparer la logique métier des routes permet de :
 - **Améliorer la maintenabilité** du code, en isolant la logique métier des aspects de gestion des requêtes HTTP.
 - **Faciliter la réutilisation** de la logique métier dans différentes parties de l'application.
 - **Simplifier les tests** en rendant les contrôleurs plus légers et plus faciles à tester indépendamment de la gestion des requêtes.
 
+---
+
 ### 6. Pourquoi utiliser des services séparés ?
 Les services tels que `mongoService.js` et `redisService.js` permettent d'encapsuler des opérations spécifiques aux technologies utilisées. Cela offre :
 - **Une organisation claire** du code, en séparant les préoccupations.
 - **Une réutilisation des fonctions utilitaires**, réduisant la duplication du code dans l'application.
 - **Une gestion centralisée des responsabilités**, chaque service se concentrant sur une seule tâche, comme l'accès à la base de données ou le cache.
+
+---
 
 ### 7. Comment gérer efficacement le cache avec Redis ?
 Pour optimiser l'utilisation de Redis comme cache, il est recommandé de suivre ces bonnes pratiques :
