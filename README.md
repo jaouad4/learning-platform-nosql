@@ -67,6 +67,8 @@ Pour optimiser l'utilisation de Redis comme cache, il est recommandé de suivre 
 - Définir un **TTL (Time To Live)** pour chaque élément mis en cache afin de s'assurer qu'il soit supprimé après une certaine période, évitant ainsi des données obsolètes.
 - Gérer les **erreurs de cache** de manière appropriée, en prévoyant des mécanismes de secours pour garantir que l'application continue de fonctionner même en cas d'indisponibilité temporaire de Redis.
 
+***
+
 ## Installation
 
 1. Cloner le repository :
